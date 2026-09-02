@@ -82,3 +82,19 @@ class PerceptronRulePerceptron(Perceptron):
         self.misclassified_samples_rate.append(misclassified_counter / len(X.T))
         self.mean_squared_error.append(mean_squared_error / len(X.T))
         
+class DeltaRulePerceptron(Perceptron):
+    def epoch_train(self, X, T):
+        misclassified_counter = 0
+        mean_squared_error = 0
+        for x, t in zip(X.T, T):
+            y = self.predict(x)
+            error = t - y
+            y = self.activation_function(y)
+            if y != t:
+                misclassified_counter += 1
+            self.weights += self.learning_rate * error * x
+            
+            mean_squared_error += error ** 2
+        self.misclassified_samples.append(misclassified_counter)
+        self.misclassified_samples_rate.append(misclassified_counter / len(X.T))
+        self.mean_squared_error.append(mean_squared_error / len(X.T))

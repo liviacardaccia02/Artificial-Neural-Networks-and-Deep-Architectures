@@ -43,7 +43,36 @@ def generate_non_linearly_separable_data():
     noise_indices = np.random.choice(X.shape[1], size=int(0.1 *X.shape[1]), replace=False)
     T[noise_indices] = 1 - T[noise_indices]
     return X, T
+
+def third_dataset(n=100, mA=np.array([1.0, 0.3]), mB=np.array([0.0, -0.1]), sigmaA=0.2, sigmaB=0.3):
+    mA = np.array([1.0, 0.3])
+    sigmaA = 0.2
+
+    mB = np.array([0.0, -0.1])
+    sigmaB = 0.3
+
+    classA = np.empty((2, n))
+    classB = np.empty((2, n))
+
+    classA[0, :] = np.concatenate([
+        np.random.randn(round(0.5 * n)) * sigmaA - mA[0],
+        np.random.randn(round(0.5 * n)) * sigmaA + mA[0]
+    ])
+
+    classA[1, :] = np.random.randn(n) * sigmaA + mA[1]
+
+    classB[0, :] = np.random.randn(n) * sigmaB + mB[0]
+
+    classB[1, :] = np.random.randn(n) * sigmaB + mB[1]
+    X = np.hstack((classA, classB))
+    X = np.vstack((X, np.ones((1, 2*n))))
     
+    T = np.hstack((np.ones(n), np.zeros(n)))
+    
+    shuffle_idx = np.random.permutation(X.shape[1])
+    X = X[:, shuffle_idx]
+    T = T[shuffle_idx]
+    return X, T
 
 
 def plot_data(X, T):
