@@ -41,7 +41,7 @@ def generate_non_linearly_separable_data():
     X,T = generate_linearly_separable_data()
     
     noise_indices = np.random.choice(X.shape[1], size=int(0.1 *X.shape[1]), replace=False)
-    T[noise_indices] = 0 if T[noise_indices] == 1 else 1
+    T[noise_indices] = 1 - T[noise_indices]
     return X, T
     
 
