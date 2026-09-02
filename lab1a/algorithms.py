@@ -101,22 +101,37 @@ class DeltaRulePerceptron(Perceptron):
 
 
 class DeltaRuleBatchPerceptron(Perceptron):
+    """
+    Delta (Widrow-Hoff) rule in batch mode, using the matrix formulation.
+
+    X follows the lab convention (features by samples) and already carries the
+    bias row of ones as its last row, so the weights have shape
+    (output_size, input_size + 1) and no augmentation is needed here.
+    """
+
     def epoch_train(self, X, T):
-        misclassified_counter = 0
-        mean_squared_error = 0
-        weight_update = np.zeros_like(self.weights)
-
+        # Step 1: Forward pass over the whole batch at once.
+        # W (1, features + bias) @ X (features + bias, N) yields Y (1, N).
         Y = self.predict(X)
-        error = T - Y
-        #TODO either keep a small learning rate or normalize the weight update by the number of samples
-        #Normalize the gradient by the number of samples to prevent large updates
-        weight_update = self.learning_rate * np.dot(error, X.T)
 
-        Y = self.activation_function(Y)
-        misclassified_counter = np.sum(Y != T)
-        mean_squared_error = np.sum(error ** 2)
-        
+        # Step 2: Error between the targets and the linear output. No activation
+        # is applied here: the delta rule regresses on the raw output.
+        error = T - Y
+
+        # Step 3: Batch gradient. error (1, N) @ X.T (N, features + bias) gives a
+        # weight update of shape (1, features + bias), so every sample
+        # contributes to a single update per epoch. The update is not normalized
+        # by N, so the learning rate has to stay small.
+        weight_update = self.learning_rate * (error @ X.T)
+
+        # Step 4: Step the weights along the negative gradient.
         self.weights += weight_update
+
+        # Step 5: Track metrics for the learning curves. The activation is only
+        # used here, to turn the linear output into class predictions.
+        predictions = self.activation_function(Y)
+        misclassified_counter = np.sum(predictions != T)
+
         self.misclassified_samples.append(misclassified_counter)
-        self.misclassified_samples_rate.append(misclassified_counter / len(X.T))
-        self.mean_squared_error.append(mean_squared_error / len(X.T))
+        self.misclassified_samples_rate.append(misclassified_counter / X.shape[1])
+        self.mean_squared_error.append(np.mean(error ** 2))
