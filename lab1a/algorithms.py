@@ -98,3 +98,25 @@ class DeltaRulePerceptron(Perceptron):
         self.misclassified_samples.append(misclassified_counter)
         self.misclassified_samples_rate.append(misclassified_counter / len(X.T))
         self.mean_squared_error.append(mean_squared_error / len(X.T))
+
+
+class DeltaRuleBatchPerceptron(Perceptron):
+    def epoch_train(self, X, T):
+        misclassified_counter = 0
+        mean_squared_error = 0
+        weight_update = np.zeros_like(self.weights)
+
+        Y = self.predict(X)
+        error = T - Y
+        #TODO either keep a small learning rate or normalize the weight update by the number of samples
+        #Normalize the gradient by the number of samples to prevent large updates
+        weight_update = self.learning_rate * np.dot(error, X.T)
+
+        Y = self.activation_function(Y)
+        misclassified_counter = np.sum(Y != T)
+        mean_squared_error = np.sum(error ** 2)
+        
+        self.weights += weight_update
+        self.misclassified_samples.append(misclassified_counter)
+        self.misclassified_samples_rate.append(misclassified_counter / len(X.T))
+        self.mean_squared_error.append(mean_squared_error / len(X.T))
