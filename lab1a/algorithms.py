@@ -108,9 +108,8 @@ class DeltaRuleBatchPerceptron(Perceptron):
 
         Y = self.predict(X)
         error = T - Y
-        #TODO either keep a small learning rate or normalize the weight update by the number of samples
-      
-        weight_update = self.learning_rate * np.dot(error, X.T) # / X.shape[1]
+        
+        weight_update = self.learning_rate * np.dot(error, X.T) / X.shape[1]
 
         Y = self.activation_function(Y)
         misclassified_counter = np.sum(Y != T)
