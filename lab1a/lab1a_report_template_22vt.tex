@@ -1,66 +1,72 @@
-\documentclass[a4paper]{article}
-
-\usepackage[english]{babel}
+\documentclass[11pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
-\usepackage{amssymb}
-\usepackage{framed}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{float}
+\geometry{a4paper, margin=2.5cm}
 
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{3ex}
+\title{DD2437 Lab Assignment 1a: \\ Classification with a Single-Layer Perceptron}
+\author{Cardaccia Livia, Felbor Tytus, Prete Giovanni}
+\date{\today}
 
 \begin{document}
 
-\begin{center}
-  {\large Artificial Neural Networks and Deep Architectures, DD2437}\\
-  \vspace{7mm}
-  {\huge Short report on lab assignment 1\\[1ex]}
-  {\Large Classification with a single-layer perceptron}\\
-  \vspace{8mm}  
-  {\Large Author 1, Author 2 and Author 3\\}
-  \vspace{4mm}
-  {\large September 1, 2018 (\it{fix the date})\\}
-\end{center}
+\maketitle
 
-\begin{framed}
-Please be aware of the constraints for this document. The main intention here is that you learn how to select and organise the most relevant information into a concise and coherent report. The upper limit for the number of pages is 6 pages for Lab 1a (more for other labs) with fonts and margins comparable to those in this template and no appendices are allowed. \\
-All short lab reports should be submitted to Canvas by the authors as a team before the lab presentation is made. To claim bonus points the authors should uploaded their short report a day before the bonus point deadline. The report can serve as a support for your lab presentation, though you may put emphasis on different aspects in your oral demonstration in the lab.
-Below you find extra instructions in italics. Please remove them and use normal font for your text.
-\end{framed}
+\section{Main objectives and scope of the assignment}
+The primary objective of this assignment is to investigate the capabilities and limitations of single-layer perceptrons (Threshold Logic Units) for binary classification tasks. Specifically, the study compares the classical Perceptron learning rule with the Delta (Widrow-Hoff) rule, evaluating their convergence dynamics, sensitivity to hyperparameters, and behavior in both sequential (online) and batch learning modes. 
 
-\section{Main objectives and scope of the assignment \normalsize{\textit{(ca. 0.5 page)}}}
+Furthermore, the scope includes analyzing the geometric limitations of linear classifiers. This is achieved by evaluating the network's performance on datasets that are not linearly separable (overlapping and bimodal distributions), investigating the impact of the bias weight on the decision boundary, and observing how sampling bias (via data subsampling) skews the network's generalization.
 
-\textit{List here a concise list of your major intended goals, what you planned to do and what you wanted to learn/what problems you were set to address or investigate, e.g.}\\
-Our major goals in the assignment were  
+\section{Methods}
+\subsection{Data Generation and Representation}
+Datasets were generated using 2D multivariate normal distributions. For linearly separable data, 100 samples per class were generated with means $\mu_A = [1.0, 0.5]$ and $\mu_B = [-1.0, 0.0]$, using a standard deviation of $\sigma = 0.3$. For overlapping (non-linearly separable) data, the standard deviation was increased to $\sigma = 0.5$. A third dataset featured a bimodal distribution for Class A. To enable the network to learn an offset decision boundary, the input matrix $X$ was augmented with a row of ones (the bias trick). Target labels $T$ were set to $\{0, 1\}$ for the Perceptron rule and converted to $\{-1, 1\}$ for the Delta rule to ensure correct gradient direction.
+
+\subsection{Learning Algorithms}
+Three algorithmic variants were implemented from scratch using NumPy:
 \begin{itemize}
-\item to .......
-\item to .......
-\item to ....... 
+    \item \textbf{Perceptron Rule (Sequential):} Updates weights sample-by-sample based on the error computed \textit{after} the step activation function ($\Delta W = \eta (t - y) x^T$).
+    \item \textbf{Delta Rule (Sequential):} Updates weights sample-by-sample using the continuous error measured \textit{before} thresholding ($\Delta W = \eta (t - Wx) x^T$).
+    \item \textbf{Delta Rule (Batch):} Computes the error across the entire dataset simultaneously. To allow direct comparison using the same learning rate ($\eta = 0.01$), the accumulated gradient was normalized by the number of samples $N$ ($\Delta W = \frac{\eta}{N} (T - WX) X^T$).
 \end{itemize}
-
-\textit{Then you can write two or three sentences about the scope, limitations and assumptions made for the lab assignment}\\
-
-\section{Methods \normalsize{\textit{(ca. 1 page)}}}
-\textit{Mention here in just a couple of sentences what tools you have used, e.g. programming/scripting environment, toolboxes. If you use some unconventional method or introduce a clearly different performance measure, you can briefly mention or define it here.}\\
+Performance was tracked per epoch using Mean Squared Error (MSE) and the misclassification rate. Weights were initialized from a zero-mean normal distribution.
 
 \section{Results and discussion}
 
-\begin{framed}
-\textit{Make effort to be \textbf{concise and to the point} in your story of what you have done, what you have observed and demonstrated, and in your responses to specific questions in the assignment. You should skip less important details and explanations. In addition, you are requested to add a \textbf{discussion} about your interpretations/predictions or other thoughts concerned with specific tasks in the assignment. This can boil down to just a few bullet points or a couple of sentences for each section of your results. 
-Overall, structure each Results section as you like, e.g. in points. Analogously, feel free to group and combine answers to the questions, even between different experiments, e.g. with linearly separable and non-separable data, if it makes your story easier to convey. 
-Plan your sections and consider making combined figures with subplots rather than a set of separate figures. \textbf{Figures} have to condense information, e.g. there is no point showing a separate plot for generated data and then for a decision boundary, this information can be contained in a single plot. Always carefully describe the axes, legends and add meaningful captions. Keep in mind that figures serve as a support for your description of the key findings (it is like storytelling but in technical format and academic style. 
-Similarly, use \textbf{tables} to group relevant results for easier communication but focus on key aspects, do not overdo it. All figures and tables attached in your report must be accompanied by captions and referred to in the text, e.g. $"$in Fig.X or Table Y one can see ....$"$. 
-When you report quantities such as errors or other performanc measures, round numbers to a reasonable number of decimal digits (usually 2 or 3 max). Apart from the estimated mean values, obtained as a result of averaging over multiple simulations, always include also \textbf{the second moment}, e.g. standard deviation (S.D.). The same applies to some selected plots where \textbf{error bars} would provide valuable information, especially where conclusive comparisons are drawn.} 
-\end{framed}
+\subsection{Classification with a single-layer perceptron}
 
-\subsection{Classification with a single-layer perceptron \textit{(ca.1.5-2 pages)}}
-\textit{Focus on results and findings from perceptron simulations on linearly separable data. Answer the questions, quantify the outcomes, discuss your interpretations and summarise key findings as conclusions.}
+\subsubsection{Algorithm Comparison and Convergence}
+The algorithms were first evaluated on the linearly separable dataset. As shown in Figure \ref{fig:separable_comparison}, both the Delta Sequential and Delta Batch algorithms successfully converged, reaching a misclassification rate of 0 within 15 epochs. The MSE for the Batch mode decayed smoothly and monotonically, confirming a stable descent along the error surface. In contrast, the Sequential mode exhibited slight local oscillations before converging, which is characteristic of the stochastic nature of per-sample updates. Random weight initialization affected the exact starting error and slightly shifted the number of epochs to convergence, but did not prevent either variant from finding a valid separating hyperplane.
 
-\subsection{Classification of data that are not linearly separable\textit{(ca.1.5-2 pages)}}
-\textit{Focus on results and findings from perceptron simulations on data that are not linearly separable.}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{metrics_comparison_test1.png}
+    \caption{Learning curves comparing the Delta Rule (Sequential) and Delta Rule (Batch) on linearly separable data. Both variants successfully reduce the misclassification rate to zero.}
+    \label{fig:separable_comparison}
+\end{figure}
 
+\subsubsection{Impact of Removing the Bias}
+When the bias term was removed ($w_0 = 0$), the decision boundary was geometrically constrained to pass exactly through the origin ($w_1x_1 + w_2x_2 = 0$). Experimental verification confirmed the hypothesis: the bias-free perceptron only converged when the distribution means $\mu_A$ and $\mu_B$ were located in strictly opposite quadrants (e.g., upper-right and lower-left). When both means were placed in the same quadrant, the network failed to separate the data entirely, resulting in a strictly positive misclassification rate [INSERT FINAL MISCLASSIFICATIONS HERE], as a line anchored at the origin could not physically pass between the clusters.
 
-\section{Final remarks \normalsize{\textit{(ca. 0.5 page)}}}
-\textit{Please share your final reflections on the lab, its content and your own learning. Which parts of the lab assignment did you find confusing or not necessarily helping in understanding important concepts and which parts you have found interesting and relevant to your learning experience? \\
-Here you can also formulate your opinion, interpretation or speculation about some of the simulation outcomes. Please add any follow-up questions that you might have regarding the lab tasks and the results you have produced.}
+\subsection{Classification of data that are not linearly separable}
+
+\subsubsection{Overlapping Distributions}
+For the dataset with increased variance ($\sigma=0.5$), the classes overlapped, making perfect linear separation impossible. Figure \ref{fig:overlapping} demonstrates the failure mode of the single-layer perceptron. Both the classical Perceptron and the Delta Rule failed to reach zero misclassifications, heavily oscillating or plateauing at a minimum error rate of approximately 2\%. Notably, the Delta rule achieved a lower and more stable MSE, as it optimizes for the continuous distance to the target rather than solely focusing on hard misclassifications.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{metrics_comparison_test3.png}
+    \caption{Learning curves for Perceptron vs. Delta Rule on overlapping, non-linearly separable data. Neither algorithm reaches zero misclassifications.}
+    \label{fig:overlapping}
+\end{figure}
+
+\subsubsection{Bimodal Data and Sampling Bias}
+The network was subsequently tested on a non-linearly separable bimodal dataset under four subsampling conditions. Subsampling heavily skewed the decision boundary. For instance, removing 50\% of Class A caused the network to prioritize minimizing errors on the majority class (Class B), shifting the decision boundary toward Class A and degrading the True Positive Rate [INSERT PER CLASS ACCURACY HERE].
+
+As observed in the subsampling plots (e.g., \texttt{removed\_25\_A\_25\_B.png}), the sequential algorithms (Perceptron and Delta) exhibited severe thrashing, oscillating around a 20--30\% misclassification rate. Interestingly, the Delta Batch algorithm stabilized but converged to a highly suboptimal local minimum, resulting in a persistent misclassification rate of roughly 65\%. This suggests that for highly asymmetric, uncentered data, the averaged batch gradient directed the network toward a local minimum where it likely collapsed to predicting the majority class, whereas the stochastic noise of the sequential updates allowed the online rules to escape and achieve better, albeit unstable, empirical accuracy.
+
+\section{Final remarks}
+This lab demonstrated the fundamental mechanics and theoretical limitations of the single-layer perceptron. While both the Perceptron and Delta rules successfully classify linearly separable data, the Delta rule's optimization of continuous error yields smoother gradients and greater stability. The implementation of batch learning highlighted the necessity of gradient normalization to prevent exploding weights and revealed its susceptibility to local minima in asymmetric, non-separable datasets. Finally, the subsampling experiments emphasized that a model's generalization is only as robust as the representation of its training data; sampling bias physically rotates the decision boundary, artificially inflating accuracy for majority classes at the expense of minority classes.
 
 \end{document}
