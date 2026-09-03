@@ -7,12 +7,14 @@ class Perceptron(ABC):
                  input_size, 
                  output_size, 
                  learning_rate=0.1, 
-                 activation_function=None
+                 activation_function=None,
+                 has_bias=True
                 ):
         
-        self.weights = np.random.randn(output_size, input_size+1)
+        self.weights = np.random.randn(output_size, input_size + (1 if has_bias else 0))
         self.learning_rate = learning_rate
         self.activation_function = activation_function
+        self.has_bias = has_bias
         self.mean_squared_error = []
         self.misclassified_samples = []
         self.misclassified_samples_rate = []

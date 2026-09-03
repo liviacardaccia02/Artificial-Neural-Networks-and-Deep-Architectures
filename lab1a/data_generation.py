@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def generate_linearly_separable_data(n=100, mA=np.array([1.0, 0.5]), mB=np.array([-1.0, 0.0]), sigmaA=0.3, sigmaB=0.3):
+def generate_linearly_separable_data(n=100, mA=np.array([1.0, 0.5]), mB=np.array([-1.0, 0.0]), sigmaA=0.3, sigmaB=0.3, has_bias=True):
     """
     Generates a linearly separable dataset with two classes.
 
@@ -25,7 +25,8 @@ def generate_linearly_separable_data(n=100, mA=np.array([1.0, 0.5]), mB=np.array
     classB = classB.T
     
     X = np.hstack((classA, classB))
-    X = np.vstack((X, np.ones((1, 2*n))))
+    if has_bias:
+        X = np.vstack((X, np.ones((1, 2*n))))
     
     # Create target labels
     T = np.hstack((np.ones(n), np.zeros(n)))
@@ -37,14 +38,14 @@ def generate_linearly_separable_data(n=100, mA=np.array([1.0, 0.5]), mB=np.array
 
     return X, T
 
-def generate_non_linearly_separable_data():
-    X,T = generate_linearly_separable_data()
+def generate_non_linearly_separable_data(has_bias=True):
+    X,T = generate_linearly_separable_data(has_bias=has_bias)
     
     noise_indices = np.random.choice(X.shape[1], size=int(0.1 *X.shape[1]), replace=False)
     T[noise_indices] = 1 - T[noise_indices]
     return X, T
 
-def third_dataset(n=100, mA=np.array([1.0, 0.3]), mB=np.array([0.0, -0.1]), sigmaA=0.2, sigmaB=0.3):
+def generate_non_linearly_separable_data_second_version(n=100, mA=np.array([1.0, 0.3]), mB=np.array([0.0, -0.1]), sigmaA=0.2, sigmaB=0.3, has_bias=True):
     mA = np.array([1.0, 0.3])
     sigmaA = 0.2
 
@@ -65,7 +66,8 @@ def third_dataset(n=100, mA=np.array([1.0, 0.3]), mB=np.array([0.0, -0.1]), sigm
 
     classB[1, :] = np.random.randn(n) * sigmaB + mB[1]
     X = np.hstack((classA, classB))
-    X = np.vstack((X, np.ones((1, 2*n))))
+    if has_bias:
+        X = np.vstack((X, np.ones((1, 2*n))))
     
     T = np.hstack((np.ones(n), np.zeros(n)))
     
