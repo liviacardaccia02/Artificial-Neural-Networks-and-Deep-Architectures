@@ -39,10 +39,7 @@ def generate_linearly_separable_data(n=100, mA=np.array([1.0, 0.5]), mB=np.array
     return X, T
 
 def generate_non_linearly_separable_data(has_bias=True):
-    X,T = generate_linearly_separable_data(has_bias=has_bias)
-    
-    noise_indices = np.random.choice(X.shape[1], size=int(0.1 *X.shape[1]), replace=False)
-    T[noise_indices] = 1 - T[noise_indices]
+    X,T = generate_linearly_separable_data(mA=np.array([1.0, 0.5]), mB=np.array([-1.0, 0.0]), sigmaA=0.5, sigmaB=0.5, has_bias=has_bias)
     return X, T
 
 def generate_non_linearly_separable_data_second_version(n=100, mA=np.array([1.0, 0.3]), mB=np.array([0.0, -0.1]), sigmaA=0.2, sigmaB=0.3, has_bias=True):
@@ -77,8 +74,7 @@ def generate_non_linearly_separable_data_second_version(n=100, mA=np.array([1.0,
     return X, T
 
 
-
-def plot_data(X, T, title=None):
+def plot_data(X, T):
     """
     Plots the generated dataset.
 
@@ -92,10 +88,7 @@ def plot_data(X, T, title=None):
     
     plt.xlabel("Feature 1")
     plt.ylabel("Feature 2")
-    if title:
-            plt.title(title)
-    else:
-            plt.title("Current Data")
+    plt.title("Linearly Separable Data")
     plt.legend()
     plt.grid()
     plt.show()
