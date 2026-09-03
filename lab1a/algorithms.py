@@ -32,6 +32,12 @@ class Perceptron(ABC):
     def predict(self, x):
         return np.dot(self.weights, x)
     
+    def get_first_zero_misclassification_epoch(self):
+        for epoch, misclassified in enumerate(self.misclassified_samples):
+            if misclassified == 0:
+                return epoch
+        return None
+    
     def plot_space(self, X, T):
         x = np.linspace(X[0].min(), X[0].max(), 20)
         y = -(self.weights[0, 0] * x + (self.weights[0, 2] if self.has_bias else 0)) / self.weights[0, 1]
