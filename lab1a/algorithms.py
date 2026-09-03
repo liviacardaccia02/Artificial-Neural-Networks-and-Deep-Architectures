@@ -18,9 +18,15 @@ class Perceptron(ABC):
         self.mean_squared_error = []
         self.misclassified_samples = []
         self.misclassified_samples_rate = []
+        self.misclassified_samples_A = []
+        self.misclassified_samples_B = []
+        self.misclassified_samples_A_rate = []
+        self.misclassified_samples_B_rate = []
     
 
     def train(self, X, T, epochs):
+        self.reset_metrics()
+        self.weights = np.random.randn(1, 2 + (1 if self.has_bias else 0))
         for epoch in range(epochs):
             self.epoch_train(X, T)
         self.plot_space(X, T)
@@ -37,6 +43,15 @@ class Perceptron(ABC):
             if misclassified == 0:
                 return epoch
         return None
+    
+    def reset_metrics(self):
+        self.mean_squared_error = []
+        self.misclassified_samples = []
+        self.misclassified_samples_rate = []
+        self.misclassified_samples_A = []
+        self.misclassified_samples_B = []
+        self.misclassified_samples_A_rate = []
+        self.misclassified_samples_B_rate = []
     
     def plot_space(self, X, T):
         x = np.linspace(X[0].min(), X[0].max(), 20)
@@ -124,3 +139,8 @@ class DeltaRuleBatchPerceptron(Perceptron):
         self.misclassified_samples.append(misclassified_counter)
         self.misclassified_samples_rate.append(misclassified_counter / X.shape[1])
         self.mean_squared_error.append(np.mean(error ** 2))
+        
+        self.misclassified_samples_A.append(np.sum((Y != T) & (T == 1)))
+        self.misclassified_samples_B.append(np.sum((Y != T) & (T == -1)))
+        self.misclassified_samples_A_rate.append(np.sum((Y != T) & (T == 1)) / np.sum(T == 1))
+        self.misclassified_samples_B_rate.append(np.sum((Y != T) & (T == -1)) / np.sum(T == -1))

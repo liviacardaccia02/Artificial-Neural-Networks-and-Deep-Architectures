@@ -73,10 +73,10 @@ def generate_non_linearly_separable_data_second_version(n=100, mA=np.array([1.0,
 
     np.random.seed(42)  # For reproducibility
 
-    mA = np.array([1.0, 0.3])
+    mA = np.array([1, 0.3])
     sigmaA = 0.2
 
-    mB = np.array([0.0, -0.1])
+    mB = np.array([0, -0.1])
     sigmaB = 0.3
 
     classA = np.empty((2, n))
