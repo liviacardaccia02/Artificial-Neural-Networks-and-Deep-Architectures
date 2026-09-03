@@ -34,7 +34,7 @@ class Perceptron(ABC):
     
     def plot_space(self, X, T):
         x = np.linspace(X[0].min(), X[0].max(), 20)
-        y = -(self.weights[0, 0] * x + self.weights[0, 2]) / self.weights[0, 1]
+        y = -(self.weights[0, 0] * x + (self.weights[0, 2] if self.has_bias else 0)) / self.weights[0, 1]
         plt.scatter(X[0, T != 1], X[1, T != 1], label="Class B")
         plt.scatter(X[0, T == 1], X[1, T == 1], label="Class A")
 
