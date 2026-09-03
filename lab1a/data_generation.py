@@ -17,6 +17,8 @@ def generate_linearly_separable_data(n=100, mA=np.array([1.0, 0.5]), mB=np.array
     - X: Feature matrix of shape (2, 2*n).
     - T: Target labels of shape (2*n,).
     """
+
+    np.random.seed(42)  # For reproducibility
     
     classA = np.random.randn(n, 2) * sigmaA + mA
     classA = classA.T
@@ -39,10 +41,38 @@ def generate_linearly_separable_data(n=100, mA=np.array([1.0, 0.5]), mB=np.array
     return X, T
 
 def generate_non_linearly_separable_data(has_bias=True):
+    """
+    Generates a non-linearly separable dataset with two classes.
+
+    Parameters:
+    - has_bias: Whether to include a bias term in the feature matrix.
+    Returns:
+    - X: Feature matrix of shape (2, 2*n).
+    - T: Target labels of shape (2*n,).
+    """
+
     X,T = generate_linearly_separable_data(mA=np.array([1.0, 0.5]), mB=np.array([-1.0, 0.0]), sigmaA=0.5, sigmaB=0.5, has_bias=has_bias)
     return X, T
 
 def generate_non_linearly_separable_data_second_version(n=100, mA=np.array([1.0, 0.3]), mB=np.array([0.0, -0.1]), sigmaA=0.2, sigmaB=0.3, has_bias=True):
+    """
+    Generates a non-linearly separable dataset with two classes.
+
+    Parameters:
+    - n: Number of samples per class.
+    - mA: Mean of class A.
+    - mB: Mean of class B.
+    - sigmaA: Standard deviation of class A.
+    - sigmaB: Standard deviation of class B.
+    - has_bias: Whether to include a bias term in the feature matrix.
+
+    Returns:
+    - X: Feature matrix of shape (2, 2*n).
+    - T: Target labels of shape (2*n,).
+    """
+
+    np.random.seed(42)  # For reproducibility
+
     mA = np.array([1.0, 0.3])
     sigmaA = 0.2
 
