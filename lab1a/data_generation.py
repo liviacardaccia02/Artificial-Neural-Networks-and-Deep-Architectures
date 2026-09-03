@@ -104,7 +104,7 @@ def generate_non_linearly_separable_data_second_version(n=100, mA=np.array([1.0,
     return X, T
 
 
-def plot_data(X, T):
+def plot_data(X, T, title=None):
     """
     Plots the generated dataset.
 
@@ -118,7 +118,10 @@ def plot_data(X, T):
     
     plt.xlabel("Feature 1")
     plt.ylabel("Feature 2")
-    plt.title("Linearly Separable Data")
+    if title:
+        plt.title(title)
+    else:
+        plt.title("Current Dataset")
     plt.legend()
     plt.grid()
     plt.show()
