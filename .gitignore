@@ -555,3 +555,7 @@ TSWLatexianTemp*
 
 #output images
 *.png
+# Lab 1b part II: figures and experiment logs are report deliverables, not build
+# output. The blanket *.png / *.log rules above would otherwise drop them silently.
+!lab1b/part2_timeseries/results/*.png
+!lab1b/part2_timeseries/results/*.log

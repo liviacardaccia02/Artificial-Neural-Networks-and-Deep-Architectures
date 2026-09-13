@@ -1,0 +1,56 @@
+selecting the best model at sigma=0.09 on the validation set
+  3x3 lam=0       val 4.484e-03 +/- 4.7e-04
+  3x3 lam=1e-05   val 4.486e-03 +/- 4.6e-04
+  3x3 lam=0.0001  val 4.579e-03 +/- 5.5e-04
+  3x3 lam=0.001   val 6.316e-03 +/- 5.9e-04
+  3x3 lam=0.01    val 1.576e-02 +/- 2.4e-04
+  3x6 lam=0       val 4.085e-03 +/- 3.8e-04
+  3x6 lam=1e-05   val 4.152e-03 +/- 4.9e-04
+  3x6 lam=0.0001  val 4.251e-03 +/- 4.1e-04
+  3x6 lam=0.001   val 6.507e-03 +/- 4.0e-04
+  3x6 lam=0.01    val 1.568e-02 +/- 2.9e-04
+  3x9 lam=0       val 4.275e-03 +/- 5.2e-04
+  3x9 lam=1e-05   val 4.275e-03 +/- 4.9e-04
+  3x9 lam=0.0001  val 4.399e-03 +/- 4.9e-04
+  3x9 lam=0.001   val 6.510e-03 +/- 3.9e-04
+  3x9 lam=0.01    val 1.602e-02 +/- 2.7e-04
+  4x3 lam=0       val 4.199e-03 +/- 5.6e-04
+  4x3 lam=1e-05   val 4.221e-03 +/- 5.6e-04
+  4x3 lam=0.0001  val 4.570e-03 +/- 6.3e-04
+  4x3 lam=0.001   val 6.373e-03 +/- 5.6e-04
+  4x3 lam=0.01    val 1.589e-02 +/- 1.6e-04
+  4x6 lam=0       val 4.304e-03 +/- 4.6e-04
+  4x6 lam=1e-05   val 4.303e-03 +/- 4.4e-04
+  4x6 lam=0.0001  val 4.414e-03 +/- 4.3e-04
+  4x6 lam=0.001   val 6.515e-03 +/- 4.1e-04
+  4x6 lam=0.01    val 1.604e-02 +/- 1.5e-04
+  4x9 lam=0       val 4.282e-03 +/- 4.3e-04
+  4x9 lam=1e-05   val 4.284e-03 +/- 4.4e-04
+  4x9 lam=0.0001  val 4.342e-03 +/- 5.2e-04
+  4x9 lam=0.001   val 6.530e-03 +/- 4.3e-04
+  4x9 lam=0.01    val 1.609e-02 +/- 1.9e-04
+  5x3 lam=0       val 4.150e-03 +/- 7.6e-04
+  5x3 lam=1e-05   val 4.151e-03 +/- 7.9e-04
+  5x3 lam=0.0001  val 4.371e-03 +/- 6.4e-04
+  5x3 lam=0.001   val 6.428e-03 +/- 4.0e-04
+  5x3 lam=0.01    val 1.578e-02 +/- 2.9e-04
+  5x6 lam=0       val 3.979e-03 +/- 5.2e-04
+  5x6 lam=1e-05   val 3.930e-03 +/- 4.1e-04
+  5x6 lam=0.0001  val 4.209e-03 +/- 6.5e-04
+  5x6 lam=0.001   val 6.381e-03 +/- 5.5e-04
+  5x6 lam=0.01    val 1.594e-02 +/- 1.6e-04
+  5x9 lam=0       val 4.229e-03 +/- 4.0e-04
+  5x9 lam=1e-05   val 4.288e-03 +/- 4.4e-04
+  5x9 lam=0.0001  val 4.447e-03 +/- 4.7e-04
+  5x9 lam=0.001   val 6.493e-03 +/- 4.2e-04
+  5x9 lam=0.01    val 1.610e-02 +/- 8.7e-05
+
+selected: 5x6 lambda=1e-05
+
+                            model   arch   lambda                 val MSE                test MSE
+-------------------------------------------------------------------------------------------------
+        A: selected at sigma=0.09 5x6       1e-05  3.930e-03+/-4.1e-04     3.723e-03+/-4.9e-04   
+   B: task-2 most suitable, lam=0 5x6           0  3.979e-03+/-5.2e-04     3.739e-03+/-5.6e-04   
+  C: task-2 least suitable, lam=0 3x4           0  4.242e-03+/-3.6e-04     3.984e-03+/-5.5e-04   
+
+saved results/model_selection_noise.json
