@@ -1,0 +1,14 @@
+architecture 5x6, lambda=0.0001, lr=0.01, 3000 epochs
+
+PyTorch  (5 seeds, 8.6s total, 0.576 ms/epoch)
+  val  MSE 9.552e-04 +/- 2.4e-04
+  test MSE 8.675e-04 +/- 1.8e-04
+
+Keras 3  (5 seeds, 304.1s total, 20.275 ms/epoch)
+  val  MSE 1.099e-03 +/- 2.8e-04
+  test MSE 1.002e-03 +/- 2.8e-04
+
+Keras / PyTorch wall-time ratio: 35.2x
+
+validation-mean gap 1.44e-04, pooled seed std 2.60e-04 (0.55 sigma)
+AGREE: the two implementations are within the seed-to-seed spread.
