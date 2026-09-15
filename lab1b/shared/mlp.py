@@ -3,6 +3,27 @@ from shared.activations import phi, phi_prime
 from typing import List
 
 class MLP:
+    """
+    Multi-Layer Perceptron with backpropagation and momentum.
+
+    Attributes:
+        layers (List[int]): List of integers representing the number of neurons in each layer.
+        weights (List[np.ndarray]): List of weight matrices for each layer.
+        prev_dW (List[np.ndarray]): List of previous weight updates for momentum.
+        hins (List[np.ndarray]): List of hidden layer inputs.
+        houts (List[np.ndarray]): List of hidden layer outputs.
+        input (np.ndarray): The input to the network.
+        oin (np.ndarray): The output of the last hidden layer before the final output.
+        out (np.ndarray): The final output of the network.
+        deltas (List[np.ndarray]): List of delta values for each layer during backpropagation.
+
+    Methods:
+        forward(X): Performs a forward pass through the network.
+        backward(T): Performs backpropagation to compute the deltas.
+        update_weights(eta, alpha): Updates the weights using the computed deltas and momentum.
+        train(X, T, eta, alpha, epochs, mode="batch", X_val=None, T_val=None): Trains the network using the specified mode (batch or sequential).
+    
+    """
     def __init__(self, layers: List[int], seed: int = None):
         if seed is not None:
             np.random.seed(seed)
@@ -116,7 +137,7 @@ class MLP:
 
                 if T.ndim == 1:
                     T = T.reshape(1, -1)
-                    
+
                 for i in random_indices:
                     x_i = X[:, i:i+1]
                     t_i = T[:, i:i+1]

@@ -41,6 +41,22 @@ def generate_non_linearly_separable_data(n=100, mA=np.array([1.0, 0.3]), mB=np.a
     return X, T, classA, classB
 
 def subsample_scenario(classA, classB, scenario, seed=None):
+    """
+    Subsamples the dataset based on the specified scenario.
+    
+    Parameters:
+    - classA: Feature matrix of class A.
+    - classB: Feature matrix of class B.
+    - scenario: The scenario to subsample for (1, 2, or 3).
+    - seed: Random seed for reproducibility.
+
+    Returns:
+    - X_train: Training feature matrix.
+    - T_train: Training target labels.
+    - X_val: Validation feature matrix.
+    - T_val: Validation target labels.
+    """
+    
     if seed is not None:
         np.random.seed(seed)
 
