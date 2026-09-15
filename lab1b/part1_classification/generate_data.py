@@ -31,7 +31,7 @@ def generate_non_linearly_separable_data(n=100, mA=np.array([1.0, 0.3]), mB=np.a
         X = np.vstack((X, np.ones((1, 2*n))))
     
     # Create target labels
-    T = np.hstack((np.ones(n), np.zeros(n)))
+    T = np.hstack((np.ones(n) * (-1), np.ones(n)))
     
     # Shuffle the data
     shuffle_idx = np.random.permutation(X.shape[1])
