@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-def generate_non_linearly_separable_data(n=100, mA=np.array([1.0, 0.3]), mB=np.array([0.0, -0.1]), sigmaA=0.2, sigmaB=0.3, has_bias=True, seed=None):
+def generate_non_linearly_separable_data(n=100, mA=np.array([1.0, 0.3]), mB=np.array([0.0, -0.1]), sigmaA=0.2, sigmaB=0.3, seed=None):
     """
     Generates a non-linearly separable dataset with two classes.
 
@@ -15,6 +15,8 @@ def generate_non_linearly_separable_data(n=100, mA=np.array([1.0, 0.3]), mB=np.a
     Returns:
     - X: Feature matrix of shape (2, 2*n).
     - T: Target labels of shape (2*n,).
+    - classA: Feature matrix of class A.
+    - classB: Feature matrix of class B.
     """
 
     if seed is not None:
@@ -27,8 +29,6 @@ def generate_non_linearly_separable_data(n=100, mA=np.array([1.0, 0.3]), mB=np.a
     classB = classB.T
     
     X = np.hstack((classA, classB))
-    if has_bias:
-        X = np.vstack((X, np.ones((1, 2*n))))
     
     # Create target labels
     T = np.hstack((np.ones(n) * (-1), np.ones(n)))
@@ -38,7 +38,7 @@ def generate_non_linearly_separable_data(n=100, mA=np.array([1.0, 0.3]), mB=np.a
     X = X[:, shuffle_idx]
     T = T[shuffle_idx]
 
-    return X, T
+    return X, T, classA, classB
 
 def subsample_scenario(classA, classB, scenario, seed=None):
     if seed is not None:
