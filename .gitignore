@@ -559,3 +559,5 @@ TSWLatexianTemp*
 # output. The blanket *.png / *.log rules above would otherwise drop them silently.
 !lab1b/part2_timeseries/results/*.png
 !lab1b/part2_timeseries/results/*.log
+
+.DS_Store
