@@ -17,9 +17,6 @@ class MLP:
         
         self.prev_dW = [np.zeros_like(W) for W in self.weights]
         
-        for i in self.weights:
-            print(f"Weight shape: {i.shape}")
-        
     def forward(self, X):
         self.hins = []
         self.houts = []
@@ -99,10 +96,12 @@ class MLP:
             
     def train(self, X, T, eta, alpha, epochs, mode="batch", X_val=None, T_val=None):
         history = {'train_mse': [], 'train_misclass': [], 'val_mse': [], 'val_misclass': []}
+        self.predictions = {"train": [], "val": []}
         
         for epoch in range(epochs):
             if mode == "batch":
                 out = self.forward(X)
+                self.predictions["train"].append(out)
                 train_loss = np.mean((out - T) ** 2)
                 train_misclass = np.mean(np.sign(out) != np.sign(T))
                 
@@ -129,9 +128,11 @@ class MLP:
             
             history['train_mse'].append(train_loss)
             history['train_misclass'].append(train_misclass)
+            self.predictions["train"].append(out)
             
             if X_val is not None and T_val is not None:
                 val_out = self.forward(X_val)
+                self.predictions["val"].append(val_out)
                 val_loss = np.mean((val_out - T_val) ** 2)
                 val_misclass = np.mean(np.sign(val_out) != np.sign(T_val))
                 
