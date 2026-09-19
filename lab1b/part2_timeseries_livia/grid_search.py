@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import pandas as pd
+import matplotlib.pyplot as plt
 from part2_timeseries_livia.build_dataset import make_embedding, split_data, add_noise
 from part2_timeseries_livia.generate_mackey_glass import mackey_glass
 
@@ -10,13 +11,13 @@ import keras
 import torch
 from keras.regularizers import l2
 
-def build_and_train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, nh1, nh2, learning_rate=0.01, l2_reg=0.001, patience=300, epochs=1000, seed=None):
+def build_and_train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, nh1, nh2, learning_rate=0.01, patience=3000, epochs=10000, seed=None):
     if seed is not None:
         keras.utils.set_random_seed(seed)
                                 
     model = keras.Sequential([keras.layers.Input(shape=(5,)),
-                              keras.layers.Dense(nh1, activation='tanh', kernel_regularizer=l2(l2_reg)),    
-                              keras.layers.Dense(nh2, activation='tanh', kernel_regularizer=l2(l2_reg)),
+                              keras.layers.Dense(nh1, activation='tanh'),    
+                              keras.layers.Dense(nh2, activation='tanh'),
                               keras.layers.Dense(1, activation='linear')])
 
     model.compile(
@@ -50,7 +51,8 @@ def build_and_train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, nh1, n
         'seed': seed,
         'val_mse': min(history.history['val_mse']), # Best validation MSE achieved
         'test_mse': test_mse,
-        'epochs_run': len(history.history['loss']) # How many epochs it took before stopping
+        'epochs_run': len(history.history['loss']), # How many epochs it took before stopping
+        'model': model  # Return the trained model for further analysis if needed
     }
 
 def main():
