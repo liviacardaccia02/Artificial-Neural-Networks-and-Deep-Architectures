@@ -22,15 +22,15 @@ def main():
 
     # Note: This was obtained from the grid search results, from the grid_search.py script. 
     # The best and worst architectures were determined based on validation MSE.
-    best_arch = (5, 4)  
+    best_arch = (5, 6)  
     worst_arch = (3, 2) 
 
     print(f"Training Most Suitable ({best_arch[0]}x{best_arch[1]})...")
-    result_best = build_and_train_model(X_train, Y_train, X_val, Y_val, nh1=best_arch[0], nh2=best_arch[1])
+    result_best = build_and_train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, nh1=best_arch[0], nh2=best_arch[1])
     model_best = result_best['model']
     
     print(f"Training Least Suitable ({worst_arch[0]}x{worst_arch[1]})...")
-    result_worst = build_and_train_model(X_train, Y_train, X_val, Y_val, nh1=worst_arch[0], nh2=worst_arch[1])
+    result_worst = build_and_train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, nh1=worst_arch[0], nh2=worst_arch[1])
     model_worst = result_worst['model']
 
     pred_best = model_best.predict(X_test, verbose=0).flatten()
