@@ -1,14 +1,14 @@
 import numpy as np
 import os
 import pandas as pd
-import keras
-from keras.regularizers import l2
 from part2_timeseries_livia.build_dataset import make_embedding, split_data, add_noise
 from part2_timeseries_livia.generate_mackey_glass import mackey_glass
 
 os.environ.setdefault("KERAS_BACKEND", "torch")
+import keras
+from keras.regularizers import l2
 
-def train_noise_model(X_train_noisy, Y_train, X_val, Y_val, nh1, nh2, l2_reg, epochs=5000, seed=42):
+def train_noise_model(X_train_noisy, Y_train, X_val, Y_val, nh1, nh2, l2_reg, epochs=3000, seed=42):
     """Trains a model WITH weight decay and WITHOUT early stopping."""
     keras.utils.set_random_seed(seed)
                                 
@@ -77,10 +77,11 @@ def main():
         for n2 in nh2_grid:
             for l2_val in lambda_values:
                 for seed in range(N_SEEDS):
+                    print(f"Training model with nh2={n2}, lambda={l2_val}, seed={seed}...")
                     # Generate fresh noise for every seed to ensure robust averaging
                     X_train_noisy = add_noise(X_train_clean, sigma=sigma, seed=seed)
                     
-                    res = train_noise_model(X_train_noisy, Y_train, X_val, Y_val, nh1, n2, l2_val, epochs=5000, seed=seed)
+                    res = train_noise_model(X_train_noisy, Y_train, X_val, Y_val, nh1, n2, l2_val, epochs=3000, seed=seed)
                     res['sigma'] = sigma
                     all_runs.append(res)
                 print(f"Finished nh2={n2}, lambda={l2_val}")
