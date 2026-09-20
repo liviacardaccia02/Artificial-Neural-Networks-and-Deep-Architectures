@@ -14,7 +14,7 @@ from keras.regularizers import l2
 CLEAN_BEST_ARCH = (5, 4)
 CLEAN_WORST_ARCH = (3, 2)
 
-def train_for_selection(X_train_noisy, Y_train, X_val, Y_val, nh1, nh2, l2_reg, epochs=2000):
+def train_for_selection(X_train_noisy, Y_train, X_val, Y_val, nh1, nh2, l2_reg, epochs=10000):
     """Phase 1: Fixed epochs to purely evaluate the effect of architecture and lambda."""
     keras.utils.set_random_seed(42) # Fixed seed for fair selection comparison
                                 
