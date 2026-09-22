@@ -1,99 +1,54 @@
-"""Time-delay embedding and the train/validation/test split (lab section 4.1).
-
-A feed-forward MLP has no memory, so the *time* structure has to be put into
-the input vector by hand. That is the time-delay (or "time-lagged") embedding:
-each sample is a short window of the past, and the target is a value in the
-future.
-
-    input(t)  = [x(t-20), x(t-15), x(t-10), x(t-5), x(t)]   -> 5 inputs
-    target(t) =  x(t+5)                                      -> 1 output
-
-Takens' embedding theorem is the justification: for a deterministic dynamical
-system, a delay vector of sufficient dimension reconstructs a state equivalent
-to the true (hidden) state. Once the state is reconstructed, the next value is
-a *deterministic function* of that vector -- exactly the kind of thing an MLP
-can approximate.
-
-The split into train/validation/test must be into CONSECUTIVE blocks, not a
-random shuffle. Neighbouring windows overlap heavily (input(t) and input(t+1)
-share four of five components), so a random split would leak almost-identical
-samples into validation and test and give an optimistic, meaningless error.
-"""
-
 import numpy as np
 
-LAGS = (-20, -15, -10, -5, 0)  # five inputs
-HORIZON = 5                    # predict x(t+5)
-T_START, T_END = 301, 1500     # 1200 samples, as fixed by the lab
+T_START = 301
+T_END = 1500
+LAGS = [-20, -15, -10, -5, 0]
+HORIZON = 5 # to predict x(t+5)
 
-
-def make_embedding(x, t_start=T_START, t_end=T_END, lags=LAGS, horizon=HORIZON):
-    """Build (X, y) with X of shape (N, 5) and y of shape (N,).
-
-    Keras expects samples along rows -- the opposite of the column convention
-    used in part I and in the MATLAB snippets in the lab PDF. Transposing here
-    once is cheaper than fighting the library everywhere else.
+def make_embedding(X, t_start=T_START, t_end=T_END, lags=LAGS, horizon=HORIZON):
     """
-    t = np.arange(t_start, t_end + 1)
-    if t.max() + horizon >= len(x):
-        raise ValueError(
-            f"series too short: need at least {t.max() + horizon + 1} points, got {len(x)}"
-        )
-    X = np.stack([x[t + lag] for lag in lags], axis=1)
-    y = x[t + horizon]
-    return X.astype(np.float32), y.astype(np.float32)
-
-
-def split_blocks(X, y, n_train=800, n_val=200, n_test=200):
-    """Consecutive, non-overlapping blocks. Last n_test samples are the test set.
-
-    TEAM DECISION: 800 / 200 / 200. The lab fixes only the 200-sample test
-    block; the 800/200 split of the remaining 1000 is ours. 200 validation
-    samples cover roughly two full oscillations of the series, which is enough
-    for the validation error to be a stable model-selection signal, while 800
-    training samples keep the training set large relative to the <=100 weights
-    of the biggest network in the grid.
+    Builds the time-delayed embedding matrix X and target vector Y.
+    Returns NumPy arrays formatted for Keras (N_samples, N_features).
     """
-    n = len(X)
-    if n_train + n_val + n_test != n:
-        raise ValueError(f"splits sum to {n_train + n_val + n_test}, dataset has {n}")
-    i, j = n_train, n_train + n_val
-    return (X[:i], y[:i]), (X[i:j], y[i:j]), (X[j:], y[j:])
 
+    X_embedded = []
+    Y_embedded = []
 
-def add_noise(y, sigma, rng):
-    """Zero-mean Gaussian noise, used in section 4.3 task 4."""
-    if sigma <= 0:
-        return y.copy()
-    return (y + rng.normal(0.0, sigma, size=y.shape)).astype(np.float32)
+    for t in range(t_start, t_end + 1):
+        input_vector = [X[t + lag] for lag in lags]
+        target_value = X[t + horizon]
 
+        X_embedded.append(input_vector)
+        Y_embedded.append(target_value)
 
-def add_noise_xy(X, y, sigma, rng):
-    """Corrupt inputs and targets with the same noise level.
+    return np.array(X_embedded), np.array(Y_embedded)
 
-    The measurement interpretation: we never observe the clean series, so every
-    lagged value in the input window is corrupted too, not just the target.
+def split_data(X_embedded, Y_embedded, n_train=700, n_val=300, n_test=200):
     """
-    if sigma <= 0:
-        return X.copy(), y.copy()
-    Xn = (X + rng.normal(0.0, sigma, size=X.shape)).astype(np.float32)
-    yn = (y + rng.normal(0.0, sigma, size=y.shape)).astype(np.float32)
-    return Xn, yn
+    Splits the dataset into training, validation, and test sets.
+    Returns the data for each set.
+    """
 
+    n_total = len(X_embedded)
+    if n_train + n_val + n_test != n_total:
+        raise ValueError(f"Splits sum to {n_train + n_val + n_test}, dataset has {n_total}")
 
-def load_data(n_points=1600, **split_kwargs):
-    """Convenience: series -> embedding -> blocks, in one call."""
-    from generate_mackey_glass import mackey_glass
+    X_train = (X_embedded[:n_train])
+    Y_train = (Y_embedded[:n_train])
+    X_val = (X_embedded[n_train:n_train + n_val])
+    Y_val = (Y_embedded[n_train:n_train + n_val])
+    X_test = (X_embedded[n_train + n_val:])
+    Y_test = (Y_embedded[n_train + n_val:])
 
-    x = mackey_glass(n_points=n_points)
-    X, y = make_embedding(x)
-    return x, split_blocks(X, y, **split_kwargs)
+    return X_train, Y_train, X_val, Y_val, X_test, Y_test
 
-
-if __name__ == "__main__":
-    import sys, os
-
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    x, (train, val, test) = load_data()
-    for name, (Xs, ys) in zip(("train", "val", "test"), (train, val, test)):
-        print(f"{name:5s} X={Xs.shape} y={ys.shape}  y range [{ys.min():.3f}, {ys.max():.3f}]")
+def add_noise(X, sigma, seed=None):
+    """
+    Adds zero-mean Gaussian noise to the input features.
+    """
+    if seed is not None:
+        np.random.seed(seed)
+    
+    # Generate Gaussian noise with mean 0 and standard deviation sigma
+    noise = np.random.normal(0, sigma, X.shape)
+    return X + noise
