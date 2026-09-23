@@ -8,7 +8,7 @@ class SOM:
         self.weights = np.random.rand(*self.grid_size, self.input_dim)
 
     def _find_bmu(self, x):
-        distances = np.linalg.norm(self.weights - x, axis=1)
+        distances = np.linalg.norm(self.weights - x, axis=-1)
         bmu_index = np.unravel_index(np.argmin(distances), self.grid_size)
         return bmu_index
 
@@ -47,7 +47,6 @@ class AnimalSOM(SOM):
         radius = 50 - (epoch * decay_rate)
         return max(int(np.round(radius)), 1)  # Ensure radius is at least 1
 
-
 class TourSOM(SOM):
     def _get_topological_distance(self, bmu_index):
         # Distance on a ring is the shorter of the direct path and wraparound path.
@@ -63,13 +62,16 @@ class TourSOM(SOM):
             return 0
         return max(0, int(np.round(2 - 2 * epoch / (total_epochs - 1))))
 
-
 class VotesSOM(SOM):
     def _get_topological_distance(self, bmu_index):
+        # MANHATTAN DISTANCE: |row - bmu_row| + |col - bmu_col|
         grid_coords = np.indices(self.grid_size)
-        return np.sqrt(np.sum((grid_coords - np.array(bmu_index)[:, np.newaxis, np.newaxis]) ** 2, axis=0))
+        row_diff = np.abs(grid_coords[0] - bmu_index[0])
+        col_diff = np.abs(grid_coords[1] - bmu_index[1])
+        return row_diff + col_diff
 
     def _get_radius(self, epoch, total_epochs):
-        decay_rate = 49 / (total_epochs - 1)
-        radius = 50 - (epoch * decay_rate)
-        return max(int(np.round(radius)), 1)  # Ensure radius is at least 1
+        # Decay from 5 down to 0
+        decay_rate = 5 / (total_epochs - 1)
+        radius = 5 - (epoch * decay_rate)
+        return max(int(np.round(radius)), 0)
