@@ -21,7 +21,7 @@ except Exception as e:
     exit()
 
 som = TourSOM(grid_size=(10,), input_dim=2, learning_rate=0.2)
-som.fit(cities_data, epochs=20)
+som.fit(cities_data, epochs=100)
 
 plt.figure(figsize=(8, 6))
 
