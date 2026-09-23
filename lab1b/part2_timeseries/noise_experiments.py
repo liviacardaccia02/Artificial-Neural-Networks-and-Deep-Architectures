@@ -1,8 +1,8 @@
 import numpy as np
 import os
 import pandas as pd
-from part2_timeseries_livia.build_dataset import make_embedding, split_data, add_noise
-from part2_timeseries_livia.generate_mackey_glass import mackey_glass
+from part2_timeseries.build_dataset import make_embedding, split_data, add_noise
+from part2_timeseries.generate_mackey_glass import mackey_glass
 
 os.environ.setdefault("KERAS_BACKEND", "torch")
 import keras
