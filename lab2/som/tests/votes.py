@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 
-from som.algorithms.som import TourSOM, VotesSOM
+from som.algorithms.som import VotesSOM
 
 votes_path = 'som/data/votes.dat'
 district_path = 'som/data/mpdistrict.dat'
@@ -42,37 +42,57 @@ party_mapping = {
     7: ('C (Centre Party)', 'orange')
 }
 
-plt.figure(figsize=(12, 8))
-
-for party_id, (party_name, party_color) in party_mapping.items():
-    # Create a boolean mask for MPs belonging to this specific party
-    mask = (party_data == party_id)
-    x_coords = bmu_positions_jittered[mask, 1]
-    y_coords = bmu_positions_jittered[mask, 0]
-    
-    plt.scatter(x_coords, y_coords, c=party_color, label=party_name, 
-                s=40, alpha=0.8, edgecolors='white', linewidth=0.5)
-
-plt.title('SOM Topological Clustering of Swedish MPs (2004-2005 Votes)')
-plt.xlim(-1, 10)
-plt.ylim(-1, 10)
-plt.gca().invert_yaxis() # Invert Y so row 0 is at the top
-
-plt.xticks(np.arange(-0.5, 10.5, 1), labels=[])
-plt.yticks(np.arange(-0.5, 10.5, 1), labels=[])
-plt.grid(True, linestyle='-', color='black', alpha=0.15)
-plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0., title="Political Parties")
-
-plt.tight_layout()
+gender_mapping = {
+    0: ('Male', 'green'),
+    1: ('Female', 'orange')
+}
 
 results_dir = 'som/results'
 if not os.path.exists(results_dir):
     os.makedirs(results_dir)
 
-fig_path = os.path.join(results_dir, 'parties_graph.png')
-plt.savefig(fig_path, dpi=300, bbox_inches='tight')
-print(f"\nPlot saved to {fig_path}")
+# Plot by party
+plt.figure(figsize=(10, 8))
+for party_id, (party_name, party_color) in party_mapping.items():
+    mask = (party_data == party_id)
+    plt.scatter(bmu_positions_jittered[mask, 1], bmu_positions_jittered[mask, 0], 
+                c=party_color, label=party_name, s=40, alpha=0.8, edgecolors='white', linewidth=0.5)
 
+plt.title('SOM Topological Clustering (By Party)')
+plt.xlim(-1, 10); plt.ylim(-1, 10); plt.gca().invert_yaxis()
+plt.xticks(np.arange(-0.5, 10.5, 1), labels=[]); plt.yticks(np.arange(-0.5, 10.5, 1), labels=[])
+plt.grid(True, linestyle='-', color='black', alpha=0.15)
+plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', title="Political Parties")
+plt.tight_layout()
+plt.savefig(os.path.join(results_dir, 'parties_graph.png'), dpi=300, bbox_inches='tight')
 plt.show()
 
+# Plot by gender
+plt.figure(figsize=(10, 8))
+for gender_id, (gender_name, gender_color) in gender_mapping.items():
+    mask = (gender_data == gender_id)
+    plt.scatter(bmu_positions_jittered[mask, 1], bmu_positions_jittered[mask, 0], 
+                c=gender_color, label=gender_name, s=40, alpha=0.8, edgecolors='white', linewidth=0.5)
 
+plt.title('SOM Topological Clustering (By Gender)')
+plt.xlim(-1, 10); plt.ylim(-1, 10); plt.gca().invert_yaxis()
+plt.xticks(np.arange(-0.5, 10.5, 1), labels=[]); plt.yticks(np.arange(-0.5, 10.5, 1), labels=[])
+plt.grid(True, linestyle='-', color='black', alpha=0.15)
+plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', title="Gender")
+plt.tight_layout()
+plt.savefig(os.path.join(results_dir, 'gender_graph.png'), dpi=300, bbox_inches='tight')
+plt.show()
+
+# Plot by district
+plt.figure(figsize=(10, 8))
+scatter = plt.scatter(bmu_positions_jittered[:, 1], bmu_positions_jittered[:, 0], 
+                      c=district_data, cmap='tab20', s=40, alpha=0.8, edgecolors='white', linewidth=0.5)
+
+plt.title('SOM Topological Clustering (By District)')
+plt.xlim(-1, 10); plt.ylim(-1, 10); plt.gca().invert_yaxis()
+plt.xticks(np.arange(-0.5, 10.5, 1), labels=[]); plt.yticks(np.arange(-0.5, 10.5, 1), labels=[])
+plt.grid(True, linestyle='-', color='black', alpha=0.15)
+plt.colorbar(scatter, label='District ID (1 - 29)')
+plt.tight_layout()
+plt.savefig(os.path.join(results_dir, 'district_graph.png'), dpi=300, bbox_inches='tight')
+plt.show()
