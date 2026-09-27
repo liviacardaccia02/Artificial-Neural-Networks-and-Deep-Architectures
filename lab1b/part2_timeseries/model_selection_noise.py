@@ -1,136 +1,149 @@
-"""Section 4.3, task 5 (non-mandatory): model selection at sigma = 0.09.
-
-Three networks are trained FROM SCRATCH on data corrupted with sigma = 0.09 and
-compared on the test set:
-
-  A. the best (nh1 x nh2, lambda) chosen by validation error under this noise
-  B. the "most suitable" architecture from task 2, with lambda = 0
-  C. the "least suitable" architecture from task 2, with lambda = 0
-
-The point: the architecture that wins on clean data need not win on noisy data.
-On clean data capacity is nearly free -- extra units can only help fit a
-deterministic function. Under noise the surplus flexibility gets spent fitting
-the particular noise realisation, so capacity becomes a liability. Weight decay
-is what buys that capacity back.
-
-Which subset selects, and why: the VALIDATION set. It is the only block that is
-neither used for weight updates nor reserved as the final test. Selecting on
-training error would pick whichever model overfits hardest; selecting on test
-error would destroy the test set's role as an unbiased generalisation estimate.
-For models B and C nothing is selected -- architecture and lambda are already
-fixed -- so there the validation set does only one job, driving early stopping.
-"""
-
-import os
-import sys
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
 import numpy as np
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
 
-from build_dataset import add_noise_xy, load_data
-from model import build_net, mse, train_torch
+from part2_timeseries.build_dataset import make_embedding, split_data, add_noise
+from part2_timeseries.generate_mackey_glass import mackey_glass
 
-SIGMA = 0.09
-NH1_GRID = (3, 4, 5)
-NH2_GRID = (3, 6, 9)
-LAMBDAS = (0.0, 1e-5, 1e-4, 1e-3, 1e-2)
-N_SEEDS = 5
-EPOCHS = 60000
-PATIENCE = 3000
-LR = 0.01
+os.environ.setdefault("KERAS_BACKEND", "torch")
+import keras
+from keras.regularizers import l2
 
+# From grid search results
+CLEAN_BEST_ARCH = (5, 4)
+CLEAN_WORST_ARCH = (3, 2)
 
-def train_noisy(nh1, nh2, lam, train, val, test, seed, sigma=SIGMA,
-                early_stopping=True, epochs=EPOCHS, patience=PATIENCE, lr=LR,
-                return_net=False):
-    (Xtr, ytr), (Xval, yval), (Xte, yte) = train, val, test
-    rng = np.random.default_rng(2000 + seed)
-    Xtr_n, ytr_n = add_noise_xy(Xtr, ytr, sigma, rng)
+def train_for_selection(X_train_noisy, Y_train, X_val, Y_val, nh1, nh2, l2_reg, epochs=10000):
+    """Phase 1: Fixed epochs to purely evaluate the effect of architecture and lambda."""
+    keras.utils.set_random_seed(42) # Fixed seed for fair selection comparison
+                                
+    model = keras.Sequential([
+        keras.layers.Input(shape=(5,)),
+        keras.layers.Dense(nh1, activation='tanh', kernel_regularizer=l2(l2_reg)),    
+        keras.layers.Dense(nh2, activation='tanh', kernel_regularizer=l2(l2_reg)),
+        keras.layers.Dense(1, activation='linear')
+    ])
 
-    net = build_net(nh1, nh2, seed=seed)
-    info = train_torch(net, Xtr_n, ytr_n, Xval, yval, lam=lam, lr=lr,
-                       epochs=epochs, early_stopping=early_stopping, patience=patience)
-    out = {
-        "nh1": nh1, "nh2": nh2, "lam": lam, "seed": seed, "sigma": sigma,
-        "val_mse": mse(net, Xval, yval),
-        "test_mse": mse(net, Xte, yte),
-        "best_epoch": info["best_epoch"],
-        "epochs_run": info["epochs_run"],
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.01), loss='mse', metrics=['mse'])
+    history = model.fit(X_train_noisy, Y_train, validation_data=(X_val, Y_val), 
+                        epochs=epochs, batch_size=len(X_train_noisy), verbose=0)
+    
+    return min(history.history['val_mse']) # Return best validation error achieved
+
+def train_for_final_comparison(X_train_noisy, Y_train, X_val, Y_val, X_test, Y_test, nh1, nh2, l2_reg, seed):
+    """Phase 2: Full training with Early Stopping on the validation set."""
+    keras.utils.set_random_seed(seed)
+                                
+    model = keras.Sequential([
+        keras.layers.Input(shape=(5,)),
+        keras.layers.Dense(nh1, activation='tanh', kernel_regularizer=l2(l2_reg)),    
+        keras.layers.Dense(nh2, activation='tanh', kernel_regularizer=l2(l2_reg)),
+        keras.layers.Dense(1, activation='linear')
+    ])
+
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.01), loss='mse', metrics=['mse'])
+
+    early_stop = keras.callbacks.EarlyStopping(monitor='val_mse', patience=3000, restore_best_weights=True)
+
+    model.fit(X_train_noisy, Y_train, validation_data=(X_val, Y_val), 
+              epochs=10000, batch_size=len(X_train_noisy), callbacks=[early_stop], verbose=0)
+    
+    test_mse = model.evaluate(X_test, Y_test, verbose=0)[1]
+    return test_mse, model
+
+def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    results_dir = os.path.join(script_dir, 'results')
+    os.makedirs(results_dir, exist_ok=True)
+
+    X_clean = mackey_glass(n_points=1600)
+    X_embedded, Y_embedded = make_embedding(X_clean, t_start=301, t_end=1500)
+    X_train_clean, Y_train, X_val, Y_val, X_test, Y_test = split_data(X_embedded, Y_embedded)
+    
+    SIGMA = 0.09
+    X_train_noisy = add_noise(X_train_clean, sigma=SIGMA, seed=42)
+
+    # ==========================================
+    # PHASE 1: MODEL SELECTION (Validation Set)
+    # ==========================================
+    print(f"--- Phase 1: Model Selection (Sigma = {SIGMA}) ---")
+    nh1_grid = [3, 4, 5]
+    nh2_grid = [2, 4, 6]
+    lambda_grid = [0.0, 0.001, 0.01, 0.1]
+    
+    best_val_mse = float('inf')
+    best_config = None
+
+    for n1 in nh1_grid:
+        for n2 in nh2_grid:
+            for l2_val in lambda_grid:
+                val_mse = train_for_selection(X_train_noisy, Y_train, X_val, Y_val, n1, n2, l2_val)
+                print(f"Arch {n1}x{n2}, Lambda {l2_val}: Val MSE = {val_mse:.5f}")
+                
+                if val_mse < best_val_mse:
+                    best_val_mse = val_mse
+                    best_config = (n1, n2, l2_val)
+
+    print(f"\n=> WINNER: Architecture {best_config[0]}x{best_config[1]} with Lambda {best_config[2]} (Val MSE: {best_val_mse:.5f})")
+
+    # ==========================================
+    # PHASE 2: FINAL COMPARISON (Test Set)
+    # ==========================================
+    print(f"\n--- Phase 2: Final Test Set Evaluation ---")
+    
+    models_to_test = {
+        "New Best Model (Noisy)": best_config,
+        f"Clean Best ({CLEAN_BEST_ARCH[0]}x{CLEAN_BEST_ARCH[1]}, L2=0)": (CLEAN_BEST_ARCH[0], CLEAN_BEST_ARCH[1], 0.0),
+        f"Clean Worst ({CLEAN_WORST_ARCH[0]}x{CLEAN_WORST_ARCH[1]}, L2=0)": (CLEAN_WORST_ARCH[0], CLEAN_WORST_ARCH[1], 0.0)
     }
-    if return_net:
-        out["net"] = net
-    return out
 
+    N_SEEDS = 5
+    results_summary = []
+    trained_models = {} # Store the last seeded model for plotting
 
-def select_best(train, val, test, nh1_grid=NH1_GRID, nh2_grid=NH2_GRID,
-                lambdas=LAMBDAS, n_seeds=N_SEEDS, sigma=SIGMA, verbose=True):
-    """Search (nh1, nh2, lambda) on VALIDATION error only. Test stays untouched."""
-    results = []
-    for nh1 in nh1_grid:
-        for nh2 in nh2_grid:
-            for lam in lambdas:
-                v = [train_noisy(nh1, nh2, lam, train, val, test, seed=s, sigma=sigma)
-                     for s in range(n_seeds)]
-                vm = np.array([r["val_mse"] for r in v])
-                results.append({"nh1": nh1, "nh2": nh2, "lam": lam,
-                                "val_mse_mean": float(vm.mean()),
-                                "val_mse_std": float(vm.std(ddof=1))})
-                if verbose:
-                    print(f"  {nh1}x{nh2} lam={lam:<7g} val {vm.mean():.3e} "
-                          f"+/- {vm.std(ddof=1):.1e}")
-    return min(results, key=lambda r: r["val_mse_mean"]), results
+    for name, config in models_to_test.items():
+        print(f"Retraining {name} across {N_SEEDS} seeds...")
+        test_mses = []
+        for seed in range(N_SEEDS):
+            test_mse, model = train_for_final_comparison(X_train_noisy, Y_train, X_val, Y_val, X_test, Y_test, 
+                                                         config[0], config[1], config[2], seed)
+            test_mses.append(test_mse)
+            if seed == 0: trained_models[name] = model # Save one for plotting
+            
+        mean_test_mse = np.mean(test_mses)
+        std_test_mse = np.std(test_mses)
+        results_summary.append({'Model': name, 'Mean_Test_MSE': mean_test_mse, 'Std_Test_MSE': std_test_mse})
+        print(f"  -> Mean Test MSE: {mean_test_mse:.5f} +/- {std_test_mse:.5f}")
 
+    # Save Results
+    df_results = pd.DataFrame(results_summary)
+    df_results.to_csv(os.path.join(results_dir, 'model_selection_noise_comparison.csv'), index=False)
 
-def compare(candidates, train, val, test, n_seeds=N_SEEDS, sigma=SIGMA):
-    """Retrain each (label, nh1, nh2, lam) from scratch on noisy data; report test MSE."""
-    out = []
-    for label, nh1, nh2, lam in candidates:
-        runs = [train_noisy(nh1, nh2, lam, train, val, test, seed=s, sigma=sigma)
-                for s in range(n_seeds)]
-        te = np.array([r["test_mse"] for r in runs])
-        va = np.array([r["val_mse"] for r in runs])
-        out.append({"label": label, "nh1": nh1, "nh2": nh2, "lam": lam,
-                    "val_mse_mean": float(va.mean()), "val_mse_std": float(va.std(ddof=1)),
-                    "test_mse_mean": float(te.mean()), "test_mse_std": float(te.std(ddof=1))})
-    return out
+    # ==========================================
+    # PHASE 3: PLOTTING THE COMPARISON
+    # ==========================================
+    time_axis = np.arange(len(Y_test))
+    plt.figure(figsize=(14, 6))
+    plt.plot(time_axis, Y_test, color='black', linewidth=2, label='True Target Series (Clean)')
 
+    colors = ['tab:blue', 'tab:orange', 'tab:red']
+    styles = ['--', '-.', ':']
+    
+    for i, (name, model) in enumerate(trained_models.items()):
+        preds = model.predict(X_test, verbose=0).flatten()
+        plt.plot(time_axis, preds, color=colors[i], linestyle=styles[i], linewidth=1.5, alpha=0.9, label=name)
 
-def format_table(rows):
-    head = f"{'model':>33} {'arch':>6} {'lambda':>8} {'val MSE':>23} {'test MSE':>23}"
-    lines = [head, "-" * len(head)]
-    for r in rows:
-        lines.append(
-            f"{r['label']:>33} {r['nh1']}x{r['nh2']:<4} {r['lam']:>8g} "
-            f"{r['val_mse_mean']:>10.3e}+/-{r['val_mse_std']:<10.1e} "
-            f"{r['test_mse_mean']:>10.3e}+/-{r['test_mse_std']:<10.1e}"
-        )
-    return "\n".join(lines)
+    plt.title(f'Mackey-Glass Test Set Predictions (Trained on Noisy Data, sigma=0.09)', fontsize=14)
+    plt.xlabel('Test Set Time Step (Relative)', fontsize=12)
+    plt.ylabel('Value', fontsize=12)
+    plt.legend(loc='upper right')
+    plt.grid(True, linestyle=':', alpha=0.6)
 
+    fig_path = os.path.join(results_dir, 'noisy_test_set_predictions.png')
+    plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+    print(f"\nPlot saved to {fig_path}")
+    plt.show()
 
 if __name__ == "__main__":
-    import json
-
-    BEST = tuple(int(v) for v in os.environ.get("BEST_ARCH", "5,6").split(","))
-    WORST = tuple(int(v) for v in os.environ.get("WORST_ARCH", "3,2").split(","))
-
-    _, (train, val, test) = load_data()
-    print(f"selecting the best model at sigma={SIGMA} on the validation set")
-    best, all_results = select_best(train, val, test)
-    print(f"\nselected: {best['nh1']}x{best['nh2']} lambda={best['lam']}\n")
-
-    rows = compare(
-        [
-            (f"A: selected at sigma={SIGMA}", best["nh1"], best["nh2"], best["lam"]),
-            ("B: task-2 most suitable, lam=0", BEST[0], BEST[1], 0.0),
-            ("C: task-2 least suitable, lam=0", WORST[0], WORST[1], 0.0),
-        ],
-        train, val, test,
-    )
-    print(format_table(rows))
-
-    here = os.path.dirname(os.path.abspath(__file__))
-    os.makedirs(os.path.join(here, "results"), exist_ok=True)
-    json.dump({"selected": best, "search": all_results, "comparison": rows},
-              open(os.path.join(here, "results", "model_selection_noise.json"), "w"), indent=1)
-    print("\nsaved results/model_selection_noise.json")
+    main()

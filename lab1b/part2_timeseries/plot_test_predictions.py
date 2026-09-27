@@ -6,9 +6,9 @@ os.environ.setdefault("KERAS_BACKEND", "torch")
 
 import keras
 
-from part2_timeseries_livia.build_dataset import make_embedding, split_data
-from part2_timeseries_livia.generate_mackey_glass import mackey_glass
-from part2_timeseries_livia.grid_search import build_and_train_model
+from part2_timeseries.build_dataset import make_embedding, split_data
+from part2_timeseries.generate_mackey_glass import mackey_glass
+from part2_timeseries.grid_search import build_and_train_model
 
 
 def main():
